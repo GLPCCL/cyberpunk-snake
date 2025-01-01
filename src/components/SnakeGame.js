@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-const GRID_SIZE = 20;
-const CELL_SIZE = 20;
-const INITIAL_SPEED = 150;
-const INITIAL_SNAKE = [
+// Définition des constantes du jeu
+const GRID_SIZE = 20;  // Taille de la grille de jeu
+const CELL_SIZE = 20;  // Taille de chaque cellule en pixels
+const INITIAL_SPEED = 150;  // Vitesse initiale du serpent (en ms)
+const INITIAL_SNAKE = [  // Position initiale du serpent
   { x: 10, y: 10 },
   { x: 9, y: 10 },
   { x: 8, y: 10 }
 ];
 
 const SnakeGame = () => {
+  // États du jeu
   const [snake, setSnake] = useState(INITIAL_SNAKE);
   const [food, setFood] = useState({ x: 15, y: 15 });
   const [direction, setDirection] = useState('RIGHT');
@@ -17,6 +19,7 @@ const SnakeGame = () => {
   const [score, setScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Génération aléatoire de la nourriture
   const generateFood = useCallback(() => {
     return {
       x: Math.floor(Math.random() * GRID_SIZE),
@@ -24,6 +27,7 @@ const SnakeGame = () => {
     };
   }, []);
 
+  // Gestion des contrôles clavier
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === ' ') {
@@ -55,6 +59,7 @@ const SnakeGame = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [direction, isPaused]);
 
+  // Boucle principale du jeu
   useEffect(() => {
     if (gameOver || isPaused) return;
 
@@ -62,6 +67,7 @@ const SnakeGame = () => {
       const newSnake = [...snake];
       const head = { ...newSnake[0] };
 
+      // Déplacement de la tête selon la direction
       switch (direction) {
         case 'UP':
           head.y -= 1;
@@ -79,16 +85,19 @@ const SnakeGame = () => {
           break;
       }
 
+      // Vérification des collisions avec les murs
       if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
         setGameOver(true);
         return;
       }
 
+      // Vérification des collisions avec le serpent
       if (newSnake.some(segment => segment.x === head.x && segment.y === head.y)) {
         setGameOver(true);
         return;
       }
 
+      // Gestion de la nourriture
       if (head.x === food.x && head.y === food.y) {
         setScore(prev => prev + 10);
         setFood(generateFood());
@@ -104,6 +113,7 @@ const SnakeGame = () => {
     return () => clearInterval(gameLoop);
   }, [snake, direction, food, gameOver, generateFood, isPaused]);
 
+  // Fonction de redémarrage du jeu
   const restartGame = () => {
     setSnake(INITIAL_SNAKE);
     setFood(generateFood());
@@ -115,16 +125,19 @@ const SnakeGame = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-      <div className="absolute inset-0 bg-[linear-gradient(transparent_1px,_#000_1px),_linear-gradient(90deg,_transparent_1px,_#000_1px)] bg-[size:20px_20px] opacity-20 pointer-events-none" style={{
-        backgroundImage: `linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)`
+      {/* Grille d'arrière-plan cyberpunk */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)',
+        backgroundSize: '20px 20px'
       }}/>
 
+      {/* Affichage du score */}
       <div className="mb-4 text-4xl font-bold text-cyan-400 tracking-widest" 
            style={{ textShadow: '0 0 10px #0ff, 0 0 20px #0ff' }}>
         SCORE: {score}
       </div>
       
+      {/* Zone de jeu */}
       <div className="relative bg-gray-900 border-2 rounded-lg shadow-2xl overflow-hidden" 
            style={{ 
              width: GRID_SIZE * CELL_SIZE, 
@@ -132,6 +145,7 @@ const SnakeGame = () => {
              borderColor: '#0ff',
              boxShadow: '0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.2)'
            }}>
+        {/* Nourriture */}
         <div className="absolute rounded-full animate-pulse"
              style={{
                width: CELL_SIZE - 2,
@@ -142,6 +156,7 @@ const SnakeGame = () => {
                boxShadow: '0 0 10px #f0f, 0 0 20px #f0f'
              }} />
 
+        {/* Corps du serpent */}
         {snake.map((segment, index) => (
           <div
             key={index}
@@ -151,16 +166,15 @@ const SnakeGame = () => {
               height: CELL_SIZE - 2,
               left: segment.x * CELL_SIZE,
               top: segment.y * CELL_SIZE,
-              backgroundColor: index === 0 ? '#0f0' : '#0f0',
-              boxShadow: index === 0 
-                ? '0 0 10px #0f0, 0 0 20px #0f0' 
-                : '0 0 5px #0f0',
+              backgroundColor: '#0f0',
+              boxShadow: index === 0 ? '0 0 10px #0f0, 0 0 20px #0f0' : '0 0 5px #0f0',
               borderRadius: index === 0 ? '4px' : '0'
             }}
           />
         ))}
       </div>
 
+      {/* Message de fin de partie */}
       {gameOver && (
         <div className="mt-4 text-3xl text-red-500 font-bold animate-pulse"
              style={{ textShadow: '0 0 10px #f00, 0 0 20px #f00' }}>
@@ -168,6 +182,7 @@ const SnakeGame = () => {
         </div>
       )}
 
+      {/* Boutons de contrôle */}
       <div className="mt-4 space-x-4">
         <button
           onClick={restartGame}
@@ -187,6 +202,7 @@ const SnakeGame = () => {
         )}
       </div>
 
+      {/* Instructions */}
       <div className="mt-6 text-cyan-400 text-center" 
            style={{ textShadow: '0 0 5px #0ff' }}>
         <p className="mb-2">CONTRÔLES:</p>
